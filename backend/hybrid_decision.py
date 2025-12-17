@@ -27,6 +27,8 @@ def prepare_features(txn, user_stats):
     f['txn_count_10min'] = txn.get('txn_count_10min', 1)
     f['txn_count_1hour'] = txn.get('txn_count_1hour', 1)
     f['recent_burst'] = 1 if f['time_since_last'] < 300 else 0
+    f['user_international_ratio'] = user_stats.get('user_international_ratio', 0.0)
+    f['user_high_risk_txn_ratio'] = user_stats.get('user_high_risk_txn_ratio', 0.0)
     return f
 
 def make_decision(txn, user_stats, model=None, features_list=None):
