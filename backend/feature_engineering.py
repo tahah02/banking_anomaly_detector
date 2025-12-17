@@ -46,10 +46,25 @@ def engineer_features():
         
         if 'CreateDate' in df.columns and df['CreateDate'].notna().any():
             df = df.sort_values(['CustomerId', 'CreateDate'])
+            df.set_index('CreateDate', inplace=True)
+            df['txn_count_30s'] = df.groupby('CustomerId')['transaction_amount']\
+                                                .rolling('30s').count().values
+                        
+                        # Calculate 10-minute density (The "Velocity" feature)
+            df['txn_count_10min'] = df.groupby('CustomerId')['transaction_amount']\
+                                                .rolling('10min').count().values
+                        
+            df.reset_index(inplace=True)
+                        
+                        # Calculate time gap between transactions
             df['time_since_last'] = df.groupby('CustomerId')['CreateDate'].diff().dt.total_seconds().fillna(3600)
-            df['recent_burst'] = (df['time_since_last'] < 300).astype(int)
         else:
-            df['time_since_last'], df['recent_burst'] = 3600, 0
+            df['txn_count_30s'], df['txn_count_10min'], df['time_since_last'] = 1, 1, 3600
+            df['month_period'] = df['CreateDate'].dt.to_period('M')
+            df['current_month_spending'] = df.groupby(['CustomerId', 'month_period'])['transaction_amount']\
+                                             .transform(lambda x: x.cumsum().shift(1)).fillna(0)
+            df['time_since_last'] = df.groupby('CustomerId')['CreateDate'].diff().dt.total_seconds().fillna(3600)
+            df['recent_burst'] = (df['time_since_last'] < 300).astype(int)               
     else:
         df['user_avg_amount'] = df['transaction_amount'].mean()
         df['user_std_amount'] = df['transaction_amount'].std()
@@ -57,6 +72,8 @@ def engineer_features():
         df['user_txn_frequency'] = len(df)
         df['deviation_from_avg'], df['amount_to_max_ratio'] = 0, 0
         df['intl_ratio'], df['time_since_last'], df['recent_burst'] = 0, 3600, 0
+        df['current_month_spending'] = 0
+        df['time_since_last'], df['recent_burst'] = 3600, 0
     
     df['txn_count_10min'], df['txn_count_1hour'] = 1, 1
     df['rolling_std'] = df.groupby('CustomerId')['transaction_amount'].transform(
