@@ -72,6 +72,57 @@ def load_data():
     path = get_feature_engineered_path() if os.path.exists(get_feature_engineered_path()) else get_clean_csv_path()
     return pd.read_csv(path) if os.path.exists(path) else None
 
+def get_monthly_spending(cid, cust_data):
+    now = datetime.now()
+    current_month = now.month
+    current_year = now.year
+
+    total_spending = 0.0
+
+    # 1. Calculate from Historical Data (Clean.csv / Feature Engineered)
+    if 'CreateDate' in cust_data.columns and len(cust_data) > 0:
+        # Avoid SettingWithCopyWarning
+        temp_df = cust_data.copy()
+        temp_df['CreateDate'] = pd.to_datetime(temp_df['CreateDate'], errors='coerce')
+
+        # Filter for current month/year
+        monthly_mask = (temp_df['CreateDate'].dt.month == current_month) & \
+                       (temp_df['CreateDate'].dt.year == current_year)
+
+        # Select appropriate amount column
+        if 'transaction_amount' in temp_df.columns:
+            amt_col = 'transaction_amount'
+        elif 'AmountInAed' in temp_df.columns:
+            amt_col = 'AmountInAed'
+        else:
+            amt_col = 'Amount'
+
+        total_spending += temp_df.loc[monthly_mask, amt_col].sum()
+
+    # 2. Calculate from Recent Session History (transaction_history.csv)
+    file_name = 'transaction_history.csv'
+    if os.path.isfile(file_name):
+        try:
+            recent_df = pd.read_csv(file_name)
+            # Filter by CID
+            recent_df = recent_df[recent_df['CustomerID'].astype(str) == str(cid)]
+
+            if 'Timestamp' in recent_df.columns and 'Amount' in recent_df.columns:
+                recent_df['Timestamp'] = pd.to_datetime(recent_df['Timestamp'], errors='coerce')
+                monthly_mask = (recent_df['Timestamp'].dt.month == current_month) & \
+                               (recent_df['Timestamp'].dt.year == current_year)
+
+                # Filter by Approved status
+                if 'Status' in recent_df.columns:
+                     status_mask = recent_df['Status'].astype(str).str.contains('Approved', case=False)
+                     monthly_mask = monthly_mask & status_mask
+
+                total_spending += recent_df.loc[monthly_mask, 'Amount'].sum()
+        except Exception as e:
+            print(f"Error reading transaction_history.csv: {e}")
+
+    return total_spending
+
 # ---------------------- LOGIN PAGE ----------------------
 
 def login_page():
@@ -176,9 +227,8 @@ def dashboard():
             is_burst = vel['txn_count_30s'] > BURST_COUNT_THRESHOLD
 
             # --- USER STATS & ML FEATURE PREP ---
-            csv_spending = cust_data[amt_col].sum() if len(cust_data) > 0 else 0
-            live_spending = st.session_state.user_spending_history.get(cid, 0.0)
-            current_spending = csv_spending + live_spending
+            # Calculate true monthly spending
+            current_spending = get_monthly_spending(cid, cust_data)
 
             current_type_txns = cust_data[cust_data['TransferType'] == t_type]
             specific_avg = current_type_txns[amt_col].mean() if len(current_type_txns) > 0 else (cust_data[amt_col].mean() if len(cust_data) > 0 else 5000)

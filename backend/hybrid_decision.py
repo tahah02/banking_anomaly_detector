@@ -105,7 +105,8 @@ def make_decision(txn, user_stats, model=None, features_list=None):
         amount=txn.get('amount', 0),
         user_avg=user_stats.get('user_avg_amount', 0),
         user_std=user_stats.get('user_std_amount', 0),
-        transfer_type=txn.get('transfer_type', 'O')
+        transfer_type=txn.get('transfer_type', 'O'),
+        spending_so_far=user_stats.get('current_month_spending', 0)
     )
 
     result['threshold'] = threshold
