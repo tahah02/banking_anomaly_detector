@@ -220,7 +220,7 @@ def dashboard():
         if not st.session_state.txn_in_progress:
             st.session_state.txn_in_progress = True
             record_txn(cid)
-
+            
             # --- BURST DETECTION ---
             vel = get_velocity(cid)
             BURST_COUNT_THRESHOLD = 5

@@ -34,37 +34,6 @@ def prepare_features(txn, user_stats):
     f['time_since_last'] = txn.get('time_since_last_txn', 3600)
     return f
 
-# def make_decision(txn, user_stats, model=None, features_list=None):
-    result = {'is_fraud': False, 'ml_prediction': 1, 'reasons': [], 'risk_score': 0.0, 'threshold': 0.0, 'velocity_anomaly': False}
-    txn_count = txn.get('txn_count_10min', 1)
-    ml_anomaly = False
-    
-    if model and features_list:
-        try:
-            f = prepare_features(txn, user_stats)
-            vec = np.array([[f.get(c, 0) for c in features_list]])
-            vec = np.nan_to_num(vec, nan=0, posinf=0, neginf=0)
-            pred = model.predict(vec)[0]
-            result['ml_prediction'] = pred
-            result['risk_score'] = -model.decision_function(vec)[0]
-            if pred == -1:
-                ml_anomaly = True
-                result['velocity_anomaly'] = True
-                result['reasons'].append(f"ML detected anomaly (velocity: {txn_count} txns, risk: {result['risk_score']:.4f})")
-        except Exception as e:
-            print(f"ML error: {e}")
-    
-    violated, reason, threshold = check_rule_violation(
-        txn.get('amount', 0), user_stats.get('user_avg_amount', 0),
-        user_stats.get('user_std_amount', 0), txn.get('transfer_type', 'O'),
-        ml_anomaly, txn_count
-    )
-    result['threshold'] = threshold
-    if violated and reason not in result['reasons']:
-        result['reasons'].append(reason)
-    
-    result['is_fraud'] = result['ml_prediction'] == -1 or violated
-    return result
 def make_decision(txn, user_stats, model=None, features_list=None):
     result = {
         'is_fraud': False,
