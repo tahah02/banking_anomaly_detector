@@ -46,6 +46,7 @@ def engineer_features():
         
         if 'CreateDate' in df.columns and df['CreateDate'].notna().any():
             df = df.sort_values(['CustomerId', 'CreateDate'])
+<<<<<<< HEAD
             df.set_index('CreateDate', inplace=True)
             df['txn_count_30s'] = df.groupby('CustomerId')['transaction_amount']\
                                                 .rolling('30s').count().values
@@ -65,6 +66,16 @@ def engineer_features():
                                              .transform(lambda x: x.cumsum().shift(1)).fillna(0)
             df['time_since_last'] = df.groupby('CustomerId')['CreateDate'].diff().dt.total_seconds().fillna(3600)
             df['recent_burst'] = (df['time_since_last'] < 300).astype(int)               
+=======
+            df['month_period'] = df['CreateDate'].dt.to_period('M')
+            df['current_month_spending'] = df.groupby(['CustomerId', 'month_period'])['transaction_amount']\
+                                             .transform(lambda x: x.cumsum().shift(1)).fillna(0)
+            df['time_since_last'] = df.groupby('CustomerId')['CreateDate'].diff().dt.total_seconds().fillna(3600)
+            df['recent_burst'] = (df['time_since_last'] < 300).astype(int)      
+        else:
+            df['current_month_spending'] = 0
+            df['time_since_last'], df['recent_burst'] = 3600, 0
+>>>>>>> 220883e0a1b6948c93f061bdbc826239fd8b3217
     else:
         df['user_avg_amount'] = df['transaction_amount'].mean()
         df['user_std_amount'] = df['transaction_amount'].std()
