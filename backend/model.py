@@ -5,6 +5,15 @@ import joblib
 import os
 
 
+<<<<<<< HEAD
+DATA_PATH = 'data/feature_Engineered_3.csv' 
+MODEL_PATH = 'backend/isolation_forest.pkl'
+FEATURES = [
+    'transaction_amount', 
+    'flag_amount',             
+    'transfer_type_encoded',   
+    'transfer_type_risk',      
+=======
 DATA_PATH = 'data/feature_Engineered(1).csv' 
 MODEL_PATH = 'backend/isolation_forest.pkl'
 
@@ -13,6 +22,7 @@ FEATURES = [
     'flag_amount_encoded', 
     'merchant_type_encoded', 
     'merchant_risk_score', 
+>>>>>>> 220883e0a1b6948c93f061bdbc826239fd8b3217
     'channel_encoded', 
     'hour', 
     'day_of_week', 
@@ -22,6 +32,16 @@ FEATURES = [
     'user_std_amount', 
     'user_max_amount', 
     'user_txn_frequency', 
+<<<<<<< HEAD
+    'deviation_from_avg',      
+    'amount_to_max_ratio',     
+    'intl_ratio',             
+    'time_since_last',         
+    # 'recent_burst',            
+    'rolling_std',            
+    'txn_count_10min', 
+    'txn_count_30s'            
+=======
     'deviation_from_user_avg', 
     'amount_to_user_max_ratio', 
     'user_international_ratio', 
@@ -35,6 +55,7 @@ FEATURES = [
     'beneficiary_risk_score',     
     'geo_anomaly_flag',           
     'recent_activity_burst'       
+>>>>>>> 220883e0a1b6948c93f061bdbc826239fd8b3217
 ]
 
 def load_data():

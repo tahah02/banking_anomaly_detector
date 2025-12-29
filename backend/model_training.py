@@ -9,7 +9,7 @@ FEATURES = [
     'channel_encoded', 'deviation_from_avg', 'amount_to_max_ratio', 'rolling_std',
     'hour', 'day_of_week', 'is_weekend', 'is_night',
     'user_avg_amount', 'user_std_amount', 'user_max_amount', 'user_txn_frequency',
-    'intl_ratio', 'time_since_last', 'recent_burst', 'txn_count_10min', 'txn_count_1hour'
+    'intl_ratio', 'time_since_last', 'recent_burst', 'txn_count_10min', 'txn_count_30s'
 ]
 
 def train_model():
